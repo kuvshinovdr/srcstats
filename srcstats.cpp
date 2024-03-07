@@ -7,6 +7,33 @@ using namespace std;
 namespace fs = filesystem;
 
 
+/// Try to open a file and read it entire contents into the string.
+bool file_to_string(
+    string&         result,
+    fs::path const& filename,
+    size_t          max_file_size = 100 << 20
+  )
+{
+  auto const file_size = fs::file_size(filename);
+  if (file_size > max_file_size)
+  {
+    clog << "File is too big: " << filename << ", " << file_size << " bytes\n";
+    return false;
+  }
+
+  ifstream file(filename, ios::binary);
+  if (!file.is_open())
+  {
+    clog << "Can't open: " << filename << '\n';
+    return false;
+  }
+
+  result.resize(file_size);
+  file.read(result.data(), file_size);
+  return file.gcount() == file_size;
+}
+
+
 /// Accumulates statistics for a set of files.
 class File_statistics
 {
@@ -45,19 +72,26 @@ public:
   // Main operation
   bool process_file(fs::path const& filename)
   {
-    ifstream file(filename);
-    if (!file.is_open())
-    {
-      clog << "Can't open: " << filename << '\n';
+    string file_data;
+    if (!file_to_string(file_data, filename))
       return false;
-    }
 
     ++_total_files;
 
-    for (string line; getline(file, line); ++_total_lines)
+    auto const new_end = remove(file_data.begin(), file_data.end(), '\r');
+    file_data.erase(new_end, file_data.end());
+
+    auto const sz = file_data.length();
+    for (size_t from = 0, to = min(file_data.find('\n'), sz); from < sz;)
     {
-      _total_length += line.length();
-      _max_length = max(_max_length, line.length());
+      auto const line_length = to - from;
+      _total_length += line_length;
+      _max_length = max(_max_length, line_length);
+
+      ++_total_lines;
+
+      from = to + 1;
+      to = min(file_data.find('\n', from), sz);
     }
 
     return true;
@@ -171,6 +205,8 @@ int main(int argc, char* argv[])
 {
   Statistics stats;
 
+  auto const start_time = chrono::steady_clock::now();
+
   for (int i = 1; i < argc; ++i)
   {
     if (fs::path path = argv[i]; fs::is_directory(path))
@@ -185,7 +221,9 @@ int main(int argc, char* argv[])
     }
   }
 
-  bool const 
+  auto const time_elapsed = chrono::steady_clock::now() - start_time;
+
+  bool const
     has_header = stats.header().total_files() != 0,
     has_source = stats.source().total_files() != 0;
 
@@ -197,6 +235,8 @@ int main(int argc, char* argv[])
     print_stats("Source files", stats.source());
   if (!(has_header || has_source))
     cout << "No header or source files have been found.\n";
+
+  cout << "Time elapsed: " << chrono::hh_mm_ss(time_elapsed) << '\n';
 
   return 0;
 }
