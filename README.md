@@ -14,4 +14,4 @@ Files are considered to be provided in ASCII encoding (or compatible 8-bit encod
 
 [Version 2](https://github.com/kuvshinovdr/srcstats/blob/34bc9b2a73cb1d1a44bf641e637e02ea4b09d74a/srcstats.cpp): Speed-up: reads files into strings as a whole then processes them. CRLF vs LF: removes all CR characters in ahead. New feature: reports time elapsed.
 
-[Version 3](https://github.com/kuvshinovdr/srcstats/blob/2afa6b6c6f0bab581cf0ba8f006b66a4cd4cfa05/srcstats.cpp): Now exceptions are reported and the program should not just silently fall down. Function file_to_string does not print messages to clog anymore reporting errors via File_error exception.
+[Version 3](https://github.com/kuvshinovdr/srcstats/blob/5d85e23bb4811f4f7cb871aae3ed8f0f31ac3c91/srcstats.cpp): Now exceptions are reported and the program should not just silently fall down. Function file_to_string does not print messages to clog anymore reporting errors via File_error exception.
