@@ -9,32 +9,56 @@ namespace fs = filesystem;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-/// Try to open a file and read it entire contents into the string.
-bool file_to_string(
-    string&         result,
-    fs::path const& filename,
-    size_t          max_file_size = 100 << 20
-  )
+/// Exception class for file_to_string error reporting.
+class File_error
+  : public runtime_error
+{
+public:
+  using runtime_error::runtime_error;
+
+  File_error(string const& msg, fs::path const& file_path, uintmax_t file_data = 0)
+    : runtime_error(msg),
+      _file_path(file_path),
+      _file_data(file_data)
+  {}
+
+  [[nodiscard]] fs::path const& file_path() const noexcept
+  {
+    return _file_path;
+  }
+
+  [[nodiscard]] uintmax_t file_data() const noexcept
+  {
+    return _file_data;
+  }
+
+private:
+  fs::path  _file_path;
+  uintmax_t _file_data = 0;
+};
+
+
+/// Try to open a file and read it entire contents into the string. The function throws on errors.
+string file_to_string(fs::path const& filename, size_t max_file_size = 100 << 20)
 {
   auto const file_size = fs::file_size(filename);
-  if (file_size > max_file_size)
-  {
-    clog << "File is too big: " << filename << ", " << file_size << " bytes\n";
-    return false;
-  }
+  if (cmp_greater(file_size, max_file_size)) // for a safer comparison of integers of different types.
+    throw File_error("file is too big", filename, file_size);
 
   ifstream file(filename, ios::binary);
   if (!file.is_open())
-  {
-    clog << "Can't open: " << filename << '\n';
-    return false;
-  }
+    throw File_error("failed to open", filename);
 
-  result.resize(file_size);
+  string result(file_size, '\0');
   file.read(result.data(), file_size);
-  return file.gcount() == file_size;
+  if (auto const bytes_read = file.gcount(); cmp_not_equal(bytes_read, file_size))
+    throw File_error("failed to read", filename, bytes_read);
+
+  return result;
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
 
 /// Generic static interface for "statistics" classes.
 template <typename Stats>
@@ -90,13 +114,10 @@ public:
     return double(total_lines()) / total_files();
   }
 
-  // Main operation
-  bool process_file(fs::path const& filename)
+  // Main operation, throws.
+  void process_file(fs::path const& filename)
   {
-    string file_data;
-    if (!file_to_string(file_data, filename))
-      return false;
-
+    string file_data = file_to_string(filename);
     ++_total_files;
 
     auto const new_end = remove(file_data.begin(), file_data.end(), '\r');
@@ -114,8 +135,6 @@ public:
       from = to + 1;
       to = min(file_data.find('\n', from), sz);
     }
-
-    return true;
   }
 
 private:
@@ -176,7 +195,7 @@ public:
   }
 
   // Main operation
-  bool process_file(fs::path const& filename)
+  void process_file(fs::path const& filename)
   {
     static char const* const header_ext[]
     {
@@ -193,8 +212,7 @@ public:
       return _header.process_file(filename);
     if (_has_ext(ext, source_ext))
       return _source.process_file(filename);
-
-    return false;
+    // The file is silently ignored if it has not extension from header_ext or source_ext.
   }
 
 private:
@@ -229,29 +247,56 @@ void print_stats(char const* title, Statistics auto const& stats)
 }
 
 
+/// Try to perform the action and deal with possible exceptions: std::exception or File_error.
+void run_and_report_exception(auto action)
+{
+  try
+  {
+    action();
+  }
+  catch (File_error const& fe)
+  {
+    clog << "Error with " << fe.file_path() << ": " << fe.what() << " (" << fe.file_data() << ")\n";
+    clog.flush();
+  }
+  catch (exception const& e)
+  {
+    clog << "Error: " << e.what() << endl;
+  }
+}
+
+
 // Entry point. Command lines parameters are paths to files or directories.
 int main(int argc, char* argv[])
 {
   Header_source_statistics stats;
 
+  // Gather statistics.
   auto const start_time = chrono::steady_clock::now();
 
   for (int i = 1; i < argc; ++i)
   {
-    if (fs::path path = argv[i]; fs::is_directory(path))
-    {
-      for (fs::recursive_directory_iterator it(path), end; it != end; ++it)
-        if (it->is_regular_file())
-          stats.process_file(it->path());
-    }
-    else if (!stats.process_file(path))
-    {
-      clog << "Can't process file: " << path << '\n';
-    }
+    run_and_report_exception([&stats, arg = argv[i]]
+      {
+        if (fs::path path = arg; fs::is_directory(path))
+        {
+          for (fs::recursive_directory_iterator it(path), end; it != end; ++it)
+            run_and_report_exception([&stats, &entry = *it]
+              {
+                if (entry.is_regular_file())
+                  stats.process_file(entry.path());
+              });
+        }
+        else
+        {
+          stats.process_file(path);
+        }
+      });
   }
 
   auto const time_elapsed = chrono::steady_clock::now() - start_time;
 
+  // Report the gathered statistics.
   bool const
     has_header = stats.header().total_files() != 0,
     has_source = stats.source().total_files() != 0;
