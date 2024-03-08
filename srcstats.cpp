@@ -194,8 +194,19 @@ public:
     return double(total_lines()) / total_files();
   }
 
+
+  // Explicit names are better than just Boolean true or false.
+  enum If_file_is_ignored
+  {
+    do_not_throw_if_file_is_ignored,
+    throw_if_file_is_ignored
+  };
+
   // Main operation
-  void process_file(fs::path const& filename)
+  void process_file(
+      fs::path const&    filename, 
+      If_file_is_ignored if_file_is_ignored = do_not_throw_if_file_is_ignored
+    )
   {
     static char const* const header_ext[]
     {
@@ -212,7 +223,9 @@ public:
       return _header.process_file(filename);
     if (_has_ext(ext, source_ext))
       return _source.process_file(filename);
-    // The file is silently ignored if it has not extension from header_ext or source_ext.
+    
+    if (if_file_is_ignored == throw_if_file_is_ignored)
+      throw File_error("file is ignored as its extension is of neither header or source", filename);
   }
 
 private:
@@ -289,7 +302,7 @@ int main(int argc, char* argv[])
         }
         else
         {
-          stats.process_file(path);
+          stats.process_file(path, Header_source_statistics::throw_if_file_is_ignored);
         }
       });
   }
