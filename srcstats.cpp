@@ -7,6 +7,8 @@ using namespace std;
 namespace fs = filesystem;
 
 
+///////////////////////////////////////////////////////////////////////////////
+
 /// Try to open a file and read it entire contents into the string.
 bool file_to_string(
     string&         result,
@@ -33,6 +35,25 @@ bool file_to_string(
   return file.gcount() == file_size;
 }
 
+
+/// Generic static interface for "statistics" classes.
+template <typename Stats>
+concept Statistics =
+  default_initializable<Stats> &&
+  requires(Stats & stats)
+  {
+    size_t{ stats.total_files()    };
+    size_t{ stats.total_length()   };
+    size_t{ stats.total_lines()    };
+    size_t{ stats.max_length()     };
+    double{ stats.average_lines()  };
+    double{ stats.average_length() };
+  };
+// Actually an overkill in this tiny program.
+// It is provided in order to demonstrate concept/requires syntax.
+
+
+///////////////////////////////////////////////////////////////////////////////
 
 /// Accumulates statistics for a set of files.
 class File_statistics
@@ -104,9 +125,13 @@ private:
   size_t _max_length   = 0;
 };
 
+static_assert(Statistics<File_statistics>);
+
+
+///////////////////////////////////////////////////////////////////////////////
 
 /// Accumulates separate statistics for header and source files.
-class Statistics
+class Header_source_statistics
 {
 public:
   // Getters
@@ -186,8 +211,12 @@ private:
   }
 };
 
+static_assert(Statistics<Header_source_statistics>);
 
-void print_stats(char const* title, auto const& stats)
+
+///////////////////////////////////////////////////////////////////////////////
+
+void print_stats(char const* title, Statistics auto const& stats)
 {
   cout << title << "\n==============\n";
   cout << "\nTotal files:        " << stats.total_files();
@@ -203,7 +232,7 @@ void print_stats(char const* title, auto const& stats)
 // Entry point. Command lines parameters are paths to files or directories.
 int main(int argc, char* argv[])
 {
-  Statistics stats;
+  Header_source_statistics stats;
 
   auto const start_time = chrono::steady_clock::now();
 
