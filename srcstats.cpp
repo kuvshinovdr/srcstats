@@ -1,7 +1,17 @@
 // srcstats.cpp
 // C++ source files statistics
 // D.R.Kuvshinov
-import std;
+#include <algorithm>
+#include <chrono>
+#include <concepts>
+#include <cstdint>
+#include <filesystem>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <utility>
 
 using namespace std;
 namespace fs = filesystem;
@@ -323,7 +333,7 @@ int main(int argc, char* argv[])
   if (!(has_header || has_source))
     cout << "No header or source files have been found.\n";
 
-  cout << "Time elapsed: " << chrono::hh_mm_ss(time_elapsed) << '\n';
+  cout << "Time elapsed: " << chrono::duration<double>(time_elapsed).count() << "s\n";
 
   return 0;
 }
