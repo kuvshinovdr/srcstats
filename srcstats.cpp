@@ -333,7 +333,7 @@ int main(int argc, char* argv[])
   if (!(has_header || has_source))
     cout << "No header or source files have been found.\n";
 
-  cout << "Time elapsed: " << time_elapsed << '\n';
+  cout << "Time elapsed: " << chrono::duration<double>(time_elapsed).count() << "s\n";
 
   return 0;
 }
