@@ -26,6 +26,11 @@ namespace srcstats
     constexpr Cpp_decomment(Character const* data, size_t size) noexcept
       : Cpp_decomment(data, data + size) {}
 
+    /// @brief       Setup the source data (with 2-character NUL padding!).
+    /// @param input input text span
+    explicit constexpr Cpp_decomment(String_view input) noexcept
+      : Cpp_decomment(input.data(), input.size()) {}
+
     /// @brief       Do the job.
     /// @param out   the pointer to the output buffer (must be no less than the source input)
     /// @return      pointer to the end of the written data
@@ -37,32 +42,20 @@ namespace srcstats
     }
 
   private:
-    Character const* _cur = nullptr;
-    Character const* _end = nullptr;
-    Character*       _out = nullptr;
+    using In_ptr  = Character const*;
+    using Out_ptr = Character*;
 
-    void _run()                             noexcept;
-    void _single_line_comment()             noexcept;
-    void _multiline_comment()               noexcept;
-    void _put_literal(Character terminator) noexcept;
-    void _put_raw_literal()                 noexcept;
+    In_ptr    _cur       { nullptr };
+    In_ptr    _end       { nullptr };
+    Out_ptr   _out       { nullptr };
+    Character _comment   {};
 
-    [[nodiscard]] bool _has_delim(
-        Character const* delim_start, 
-        Character const* delim_end
-      ) noexcept
-    {
-      for (auto delim = delim_start; delim != delim_end; ++delim)
-        if (_cur >= _end || _put() != *delim)
-          return false;
-
-      return true;
-    }
-
-    Character _put() noexcept
-    {
-      return *_out++ = *_cur++;
-    }
+    void   _run()                        noexcept;
+    In_ptr _skip_until_comment()         noexcept; // returns where comment starts, _cur is set just after the comment 
+    In_ptr _skip_literal(Character term) noexcept;
+    In_ptr _skip_raw_literal()           noexcept;
+    In_ptr _skip_single_line_comment()   noexcept;
+    In_ptr _skip_multiline_comment()     noexcept;
   };
 
 }

@@ -1,5 +1,5 @@
 /// @file   cpp_decomment.cpp
-/// @brief  Implementation of the Cpp_decomment class.
+/// @brief  Ad hoc implementation of the Cpp_decomment class.
 /// @author D.R.Kuvshinov kuvshinovdr at yandex.ru
 
 #include "cpp_decomment.hpp"
@@ -14,125 +14,125 @@ namespace srcstats
   {
     while (_cur < _end)
     {
-      switch (auto const head = *_cur++)
+      auto const from = _cur, to = _skip_until_comment();
+      _out += String_view{from, to}.copy(_out, to - from);
+      if (to < _end)
+        *_out++ = _comment;
+    }
+  }
+
+
+  Cpp_decomment::In_ptr Cpp_decomment::_skip_until_comment() noexcept
+  {
+    do
+    {
+      switch (In_ptr const comment_start = _cur; auto const head = *_cur++)
       {
       case slash:
-        switch (auto const next = *_cur++)
+        switch (*_cur++)
         {
         case slash:
-          _single_line_comment();
-          *_out++ = LF;
-          continue;
+          _comment = LF;
+          _cur     = _skip_single_line_comment();
+          return comment_start;
 
         case asterisk:
-          _multiline_comment();
-          *_out++ = space;
-          continue;
-
-        case NUL: // padding
-          *_out++ = slash;
-          return;
-
-        default:
-          *_out++ = slash;
-          *_out++ = next;
-          continue;
+          _comment = space;
+          _cur     = _skip_multiline_comment();
+          return comment_start;
         }
         break;
 
-      case quote:
       case apos:
-        *_out++ = head;
-        _put_literal(head);
+      case quote:
+        _cur = _skip_literal(head);
         break;
 
       case R:
-        *_out++ = R;
-        {
-          auto const next = *_cur++;
-          if (next == NUL)
-            return;
+        if (*_cur++ == quote)
+          _cur = _skip_raw_literal();
+        break;
+      }
+    } while (_cur < _end);
 
-          *_out++ = next;
-          if (next == quote)
-            _put_raw_literal();
-        }
+    return _end;
+  }
+
+
+  Cpp_decomment::In_ptr Cpp_decomment::_skip_literal(Character term) noexcept
+  {
+    auto const end = _end;
+    for (auto cur = _cur; cur < end;)
+    {
+      if (auto const in = *cur++; in == term)
+        return cur;
+      else
+        cur += in == backslash;
+    }
+
+    return end;
+  }
+
+
+  Cpp_decomment::In_ptr Cpp_decomment::_skip_raw_literal() noexcept
+  {
+    String_view       sv { _cur, _end };
+    String_view const term = sv.substr(0, sv.find(par_open));
+
+    // Simple case of R"(...)"
+    if (term.empty())
+    {
+      constexpr static Character   token_chars[] { par_close,       quote };
+      constexpr static String_view token         { &token_chars[0], 2     };
+
+      if (auto const pos = String_view{ _cur, _end }.find(token); pos != NPOS)
+        return _cur + pos + 1;
+      return _end;
+    }
+
+    // Complex case of R"delim(...)delim"
+    for (sv.remove_prefix(min(sv.size(), term.size() + 1)); !sv.empty();)
+    {
+      auto const pos = sv.find(term);
+      if (pos == NPOS)
         break;
 
-      default:
-        *_out++ = head;
-      }
+      bool const has_close = sv[pos - 1] == par_close;
+      sv.remove_prefix(pos + term.size());
+      if (has_close && sv.front() == quote)
+        return sv.data() + 1;
     }
-  }
 
-  
-  void Cpp_decomment::_single_line_comment() noexcept
-  {
-    while (_cur < _end)
-    {
-      switch (*_cur++)
-      {
-      case LF:        return;
-      case backslash: ++_cur;
-      }
-    }
+    return _end;
   }
 
 
-  void Cpp_decomment::_multiline_comment() noexcept
+  Cpp_decomment::In_ptr Cpp_decomment::_skip_single_line_comment() noexcept
   {
-    for (; _cur < _end; ++_cur)
+    for (String_view sv{ _cur, _end }; !sv.empty();)
     {
-      if (_cur[0] == asterisk && _cur[1] == slash)
-      {
-        _cur += 2;
-        return;
-      }
+      auto const pos = sv.find(LF);
+      if (pos == NPOS)
+        break;
+
+      bool const finish = sv[pos - 1] != backslash;
+      sv.remove_prefix(pos + 1);
+      if (finish)
+        return sv.data();
     }
+
+    return _end;
   }
 
 
-  void Cpp_decomment::_put_literal(Character terminator) noexcept
+  Cpp_decomment::In_ptr Cpp_decomment::_skip_multiline_comment() noexcept
   {
-    while (_cur < _end)
-    {
-      auto const next = *_cur++;
-      *_out++ = next;
-      if (next == terminator)
-        return;
+    constexpr static Character   token_chars[] { asterisk,        slash };
+    constexpr static String_view token         { &token_chars[0], 2     };
 
-      if (next == backslash)
-      {
-        if (auto const second = *_cur++)
-          *_out++ = second;
-        else
-          return;
-      }
-    }
-  }
-
-
-  void Cpp_decomment::_put_raw_literal() noexcept
-  {
-    // R"(...)"
-    // R"delim(...)delim"
-    //   ^
-    auto const delim_start = _cur; // where the delimiter starts
-    while (_cur < _end && *_cur != par_open)
-      _put();
-
-    if (_cur == _end)
-      return;
-
-    auto const delim_end = _cur; // where is (
-    while (_cur < _end)
-    {
-      if (
-           _put() == par_close
-        && _has_delim(delim_start, delim_end)
-        && _put() == quote
-        ) break;
-    }
+    if (auto const pos = String_view{ _cur, _end }.find(token); pos != NPOS)
+      return _cur + pos + 1;
+    return _end;
   }
 
 }

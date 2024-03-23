@@ -28,6 +28,9 @@ namespace srcstats
   /// @brief Local string view type.
   using String_view = std::basic_string_view<Character>;
 
+  /// @brief Not-a-position constant.
+  constexpr auto NPOS = String_view::npos;
+
   /// @brief Special character codes.
   namespace characters
   {
