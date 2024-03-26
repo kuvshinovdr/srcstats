@@ -30,6 +30,7 @@ SOFTWARE.
 #include "cpp_decomment.hpp"
 #include "file_type.hpp"
 #include "file.hpp"
+#include "utf8.hpp"
 
 #include <iostream>
 #include <chrono>
@@ -54,8 +55,9 @@ namespace srcstats
       "-H"sv,
       "-h"sv,
       "--help"sv,
-      "/?"sv
-      "-?"sv
+      "/?"sv,
+      "-?"sv,
+      "?"sv,
     };
 
     if (argc == 1 || (argc == 2 && ranges::contains(help_markers, argv[1])))
@@ -196,9 +198,8 @@ namespace srcstats
       _raw_cpp(String_view(file_data), ft);
 
       auto const data = file_data.data();
-      
-      Cpp_decomment cpp_decomment(data, file_data.size());
-      file_data.resize(distance(data, cpp_decomment.to(data)));
+      file_data.resize(distance(data, 
+                        cpp_decomment(file_data, data)));
       
       remove_empty_lines_and_whitespace_endings(file_data);
 
