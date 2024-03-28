@@ -63,7 +63,7 @@ namespace srcstats
     if (argc == 1 || (argc == 2 && ranges::contains(help_markers, argv[1])))
     {
       cout <<
-        "SrcStats v.0.4\n"
+        "SrcStats v.0.5\n"
         "==============\n\n"
         "Author: Kuvshinov D.R.\n"
         "This has been an educational project for my C++ lessons.\n\n"

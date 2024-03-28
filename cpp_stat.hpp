@@ -40,7 +40,7 @@ namespace srcstats
   {
   public:
     /// @brief Returns "C++" as the language name. 
-    std::string_view language_name() const noexcept override
+    [[nodiscard]] std::string_view language_name() const noexcept override
     {
       return "C++"sv;
     }

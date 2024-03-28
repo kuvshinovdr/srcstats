@@ -45,7 +45,7 @@ namespace srcstats
     virtual ~Lang_interface() {}
 
     /// @brief Get the programming language name.
-    virtual std::string_view language_name() const noexcept = 0;
+    [[nodiscard]] virtual std::string_view language_name() const noexcept = 0;
 
     /// @brief Register all file types corresponding to this language. 
     virtual void register_file_types(File_type_dispatcher&) = 0;

@@ -65,7 +65,7 @@ namespace srcstats
 
   void normalize(File_data& file_data) noexcept
   {
-    std::erase_if(file_data, [](char ch)
+    std::erase_if(file_data, [](unsigned char ch)
       {
         return ch < space && ch != TAB && ch != LF;
       });
