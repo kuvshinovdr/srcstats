@@ -22,63 +22,43 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ******************************************************************************/
 
-/// @file   file_type.cpp
-/// @brief  Recognize file type, file_type.hpp implementation.
+/// @file   lang_interface.hpp
+/// @brief  Abstract base class describing a programming language.
 /// @author D.R.Kuvshinov kuvshinovdr at yandex.ru
+#ifndef SRCSTATS_LANG_INTERFACE_HPP_INCLUDED
+#define SRCSTATS_LANG_INTERFACE_HPP_INCLUDED
 
+#include "basic.hpp"
 #include "file_type.hpp"
+#include "file_stat.hpp"
 
-#include <initializer_list>
-#include <tuple>
-#include <algorithm>
-#include <ranges>
+#include <ostream>
 
 
 namespace srcstats
 {
 
-  File_type_recognizer::File_type_recognizer()
+  /// @brief Language statistics abstract interface.
+  struct Language_statistics_interface
   {
-    _ext.reserve(20);
-    _file_type.reserve(20);
-  }
+    virtual ~Language_statistics_interface() {}
 
+    /// @brief Register all file types corresponding to this language. 
+    virtual void register_file_types(File_type_recognizer&) const = 0;
 
-  void File_type_recognizer::register_file_type(std::filesystem::path ext, File_type file_type)
-  {
-    _ext.emplace_back(std::move(ext));
-    _file_type.push_back(file_type);
-    _is_dirty = true;
-  }
+    /// @brief Accumulate statistics for the next file.
+    virtual void consume(String file_contents, std::string_view sub_type = ""sv) = 0;
 
+    /// @brief Print full statistics for this language.
+    virtual void print(std::ostream&) const = 0;
 
-  void File_type_recognizer::_sort()
-  {
-    std::ranges::sort(std::views::zip(_ext, _file_type), 
-      [](auto&& a, auto&& b)
-      {
-        return std::get<0>(a).compare(std::get<0>(b)) < 0;
-      });
+    /// @brief Get total statistics for this language including comments. 
+    [[nodiscard]] virtual File_statistics total_with_comments() const noexcept = 0;
 
-    _is_dirty = false;
-  }
-
-
-  File_type File_type_recognizer::operator()(std::filesystem::path const& filename)
-  {
-    if (_is_dirty)
-      _sort();
-
-    auto it = std::ranges::equal_range(_ext, filename.extension(),
-      [](auto const& a, auto const& b)
-      {
-        return a.compare(b) < 0;
-      });
-
-    if (it.empty())
-      return {};
-
-    return _file_type.at(it.begin() - _ext.begin());
-  }
+    /// @brief Get total statistics for this language excluding comments. 
+    [[nodiscard]] virtual File_statistics total_decommented() const noexcept = 0;
+  };
 
 }
+
+#endif//SRCSTATS_LANG_INTERFACE_HPP_INCLUDED

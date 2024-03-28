@@ -36,6 +36,9 @@ SOFTWARE.
 namespace srcstats
 {
 
+  using std::operator""sv;
+
+
   [[nodiscard]] constexpr size_t min(size_t a, size_t b) noexcept
   {
     return a < b ? a : b;
@@ -51,6 +54,9 @@ namespace srcstats
 
   /// @brief Local string view type.
   using String_view = std::basic_string_view<Character>;
+
+  /// @brief Local string storage.
+  using String = std::basic_string<Character>;
 
   /// @brief Not-a-position constant.
   constexpr auto NPOS = String_view::npos;

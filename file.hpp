@@ -90,7 +90,7 @@ namespace srcstats
     );
 
 
-  /// @brief           Remove ASCII characters with codes below 32 (SPACE) except for TAB and LF (inplace).
+  /// @brief           Remove ASCII characters with codes below 32 (SPACE) except for TAB and LF (in place).
   /// @param file_data File_data object will be resized accordingly
   void normalize(File_data& file_data) noexcept;
 

@@ -30,7 +30,7 @@ SOFTWARE.
 #include "cpp_decomment.hpp"
 #include "file_type.hpp"
 #include "file.hpp"
-#include "utf8.hpp"
+//#include "utf8.hpp" // WIP
 
 #include <iostream>
 #include <chrono>
@@ -111,6 +111,12 @@ namespace srcstats
   class Source_statistics_application
   {
   public:
+    Source_statistics_application()
+    {
+      _cpp.register_file_types(_file_type_recognizer);
+    }
+
+
     int run(int argc, char* argv[])
     {
       return run_and_report_exception([=, this]
@@ -135,33 +141,17 @@ namespace srcstats
 
   private:
     File_type_recognizer _file_type_recognizer;
-    Cpp_statistics       _raw_cpp, _dec_cpp; 
+    Cpp_statistics       _cpp;
+
     // _dec_cpp accumulate statistics for source files
     // after comments and empty lines have been removed.
 
     void _print_stats()
     {
-      using std::cout;
-      cout << "\n========================\n"
-                "# C++ files statistics #\n"
-                "========================\n\n";
-
-      if (_raw_cpp.header().files().count() != 0 || _raw_cpp.source().files().count() != 0)
-      {
-        cout << "Raw files\n"
-                "=========\n\n";
-        _raw_cpp.print(cout);
-
-        cout << "Decommented files\n"
-                "=================\n\n";
-        _dec_cpp.print(cout);
-      }
+      if (_cpp.total_with_comments().files().count() == 0)
+        std::cout << "No source or header files found.\n";
       else
-      {
-        cout << "No header or source files have been found.\n";
-      }
-
-      cout << endl;
+        _cpp.print(std::cout);
     }
 
     
@@ -190,20 +180,7 @@ namespace srcstats
 
       auto file_data = read_file_to_memory(filename, padding_bytes, maximal_file_size);
       normalize(file_data);
-
-      auto const ft = file_type == "header"sv? 
-                        Cpp_statistics::File_type::header: 
-                        Cpp_statistics::File_type::source;
-
-      _raw_cpp(String_view(file_data), ft);
-
-      auto const data = file_data.data();
-      file_data.resize(distance(data, 
-                        cpp_decomment(file_data, data)));
-      
-      remove_empty_lines_and_whitespace_endings(file_data);
-
-      _dec_cpp(String_view(file_data), ft);
+      _cpp.consume(std::move(file_data), file_type);
     }
 
 

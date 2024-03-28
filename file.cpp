@@ -83,16 +83,14 @@ namespace srcstats
       switch (*write_pos++ = *read_pos++)
       {
       case LF:
-        read_pos = 
-          std::find_if(read_pos, end, [](auto ch) { return ch != LF; });
+        read_pos = std::find_if(read_pos, end, [](auto ch) { return ch != LF; });
         break;
 
       case space:
       case TAB:
-        if (auto look_ahead = 
-                    std::find_if(read_pos, end, [](auto ch) { return ch > space || ch == LF; });
-                 look_ahead != end && *look_ahead != LF
-           )
+        if (auto const look_ahead = 
+              std::find_if(read_pos, end, [](auto ch) { return ch > space || ch == LF; });
+                       look_ahead != end && *look_ahead != LF)
         {
           write_pos = std::copy(read_pos, look_ahead, write_pos);
           read_pos  = look_ahead;

@@ -67,10 +67,10 @@ namespace srcstats
     using In_ptr = Character const*;
     using Out_ptr = Character*;
 
-    In_ptr    _cur{ nullptr };
-    In_ptr    _end{ nullptr };
-    Out_ptr   _out{ nullptr };
-    Character _comment{}; // a character which is to be output in place of the skipped comment
+    In_ptr    _cur     { nullptr };
+    In_ptr    _end     { nullptr };
+    Out_ptr   _out     { nullptr };
+    Character _comment {}; // a character which is to be output in place of the skipped comment
 
     void   _run()                        noexcept;
     In_ptr _skip_until_comment()         noexcept; // returns where comment starts, _cur is set just after the comment 

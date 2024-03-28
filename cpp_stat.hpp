@@ -28,64 +28,39 @@ SOFTWARE.
 #ifndef SRCSTATS_CPP_STAT_HPP_INCLUDED
 #define SRCSTATS_CPP_STAT_HPP_INCLUDED
 
-#include "file_stat.hpp"
+#include "lang_interface.hpp"
 
 
 namespace srcstats
 {
-
-  /// @brief C++ statistics accumulators: separate header and source file statistics.
-  class Cpp_statistics
+  
+  /// @brief C++ statistics accumulator interface.
+  class Cpp_statistics 
+    : public Language_statistics_interface
   {
   public:
-    // Getters
+    /// @brief Register all file types corresponding to C++. 
+    void register_file_types(File_type_recognizer&) const override;
 
-    /// @brief Read-only access to header file statistics. 
-    [[nodiscard]] constexpr File_statistics const& header() const noexcept
+    /// @brief Accumulate statistics for the next file that has been transcoded.
+    void consume(String file_contents, std::string_view sub_type = ""sv) override;
+
+    /// @brief Print full statistics for C++.
+    void print(std::ostream&) const override;
+
+    /// @brief Get total statistics for C++ including comments. 
+    [[nodiscard]] File_statistics total_with_comments() const noexcept override
     {
-      return _header;
+      return _raw_cpp.total();
     }
 
-    /// @brief Read-only access to source file statistics.
-    [[nodiscard]] constexpr File_statistics const& source() const noexcept
+    /// @brief Get total statistics for C++ excluding comments. 
+    [[nodiscard]] File_statistics total_decommented() const noexcept override
     {
-      return _source;
+      return _dec_cpp.total();
     }
 
-    /// @brief Calculate total file statistics.
-    [[nodiscard]] constexpr File_statistics total() const noexcept
-    {
-      return File_statistics{_header}(_source);
-    }
-
-
-    /// @brief    Print header, source and total statistics.
-    /// @param os the destination output stream
-    /// @return   os
-    std::ostream& print(std::ostream& os) const
-    {
-      bool const
-        has_header = _header.files().count() != 0,
-        has_source = _source.files().count() != 0;
-
-      if (has_header)
-        _header.print(os, "Header file statistics\n"
-                          "----------------------\n");
-
-      if (has_source)
-        _source.print(os, "Source file statistics\n"
-                          "----------------------\n");
-
-      if (has_header && has_source)
-        total().print(os, "Total file statistics\n"
-                          "---------------------\n");
-
-      return os << std::endl;
-    }
-
-
-    // Mutators
-
+  private:
     /// @brief C++ file type: header or source.
     enum class File_type
     {
@@ -93,20 +68,50 @@ namespace srcstats
       source,
     };
 
-    /// @brief Process the preconditioned file data according to its type.
-    Cpp_statistics& operator()(String_view file_data, File_type file_type) noexcept
+    /// @brief C++ statistics accumulators: separate header and source file statistics.
+    class Stat
     {
-      switch (file_type)
+    public:
+      /// @brief Read-only access to header file statistics. 
+      [[nodiscard]] constexpr File_statistics const& header() const noexcept
       {
-      case File_type::header: _header(file_data); break;
-      case File_type::source: _source(file_data); break;
+        return _header;
       }
 
-      return *this;
-    }
+      /// @brief Read-only access to source file statistics.
+      [[nodiscard]] constexpr File_statistics const& source() const noexcept
+      {
+        return _source;
+      }
 
-  private:
-    File_statistics _header, _source;
+      /// @brief Calculate total file statistics.
+      [[nodiscard]] constexpr File_statistics total() const noexcept
+      {
+        return File_statistics{ _header }(_source);
+      }
+
+      /// @brief    Print header, source and total statistics.
+      /// @param os the destination output stream
+      /// @return   os
+      std::ostream& print(std::ostream& os) const;
+
+      /// @brief Process the preconditioned file data according to its type.
+      Stat& operator()(String_view file_data, File_type file_type) noexcept
+      {
+        switch (file_type)
+        {
+        case File_type::header: _header(file_data); break;
+        case File_type::source: _source(file_data); break;
+        }
+
+        return *this;
+      }
+
+    private:
+      File_statistics _header, _source;
+    };
+
+    Stat _raw_cpp, _dec_cpp;
   };
 
 }
