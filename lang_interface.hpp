@@ -29,7 +29,6 @@ SOFTWARE.
 #define SRCSTATS_LANG_INTERFACE_HPP_INCLUDED
 
 #include "basic.hpp"
-#include "file_type.hpp"
 #include "file_stat.hpp"
 
 #include <ostream>
@@ -38,16 +37,21 @@ SOFTWARE.
 namespace srcstats
 {
 
+  class File_type_dispatcher;
+
   /// @brief Language statistics abstract interface.
-  struct Language_statistics_interface
+  struct Lang_interface
   {
-    virtual ~Language_statistics_interface() {}
+    virtual ~Lang_interface() {}
+
+    /// @brief Get the programming language name.
+    virtual std::string_view language_name() const noexcept = 0;
 
     /// @brief Register all file types corresponding to this language. 
-    virtual void register_file_types(File_type_recognizer&) const = 0;
+    virtual void register_file_types(File_type_dispatcher&) = 0;
 
     /// @brief Accumulate statistics for the next file.
-    virtual void consume(String file_contents, std::string_view sub_type = ""sv) = 0;
+    virtual void consume(String file_contents, int subtype = 0) = 0;
 
     /// @brief Print full statistics for this language.
     virtual void print(std::ostream&) const = 0;

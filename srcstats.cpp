@@ -111,9 +111,10 @@ namespace srcstats
   class Source_statistics_application
   {
   public:
+
     Source_statistics_application()
     {
-      _cpp.register_file_types(_file_type_recognizer);
+      _cpp.register_file_types(_file_type_dispatcher);
     }
 
 
@@ -140,11 +141,9 @@ namespace srcstats
 
 
   private:
-    File_type_recognizer _file_type_recognizer;
-    Cpp_statistics       _cpp;
 
-    // _dec_cpp accumulate statistics for source files
-    // after comments and empty lines have been removed.
+    File_type_dispatcher _file_type_dispatcher;
+    Cpp_statistics       _cpp;
 
     void _print_stats()
     {
@@ -152,35 +151,6 @@ namespace srcstats
         std::cout << "No source or header files found.\n";
       else
         _cpp.print(std::cout);
-    }
-
-    
-    void _process_file_or_ignore(fs::path const& filename)
-    {
-      auto const file_type = _file_type_recognizer(filename);
-      if (file_type.is_recognized() && file_type.lang() == "C++"sv)
-        _process_file(filename, file_type.subtype());
-    }
-
-
-    void _process_file_or_throw(fs::path const& filename)
-    {
-      auto const file_type = _file_type_recognizer(filename);
-      if (!file_type.is_recognized() || file_type.lang() != "C++"sv)
-        throw File_error("file is ignored as its extension is of neither header or source", filename);
-
-      _process_file(filename, file_type.subtype());
-    }
-
-
-    void _process_file(fs::path const& filename, string_view file_type)
-    {
-      constexpr size_t padding_bytes     = 2;
-      constexpr size_t maximal_file_size = size_t(10) << 20;
-
-      auto file_data = read_file_to_memory(filename, padding_bytes, maximal_file_size);
-      normalize(file_data);
-      _cpp.consume(std::move(file_data), file_type);
     }
 
 
@@ -192,12 +162,13 @@ namespace srcstats
           run_and_report_exception([this, &entry = *it]
             {
               if (entry.is_regular_file())
-                _process_file_or_ignore(entry.path());
+                _file_type_dispatcher(entry.path());
             });
       }
       else
       {
-        _process_file_or_throw(path);
+        if (!_file_type_dispatcher(path))
+          throw File_error("file type was not recognized successfully, the file was ignored", path);
       }
     }
   };

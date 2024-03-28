@@ -2,6 +2,7 @@
 #include "cpp_stat.hpp"
 #include "cpp_decomment.hpp"
 #include "file.hpp"
+#include "file_type.hpp"
 
 
 namespace srcstats
@@ -32,33 +33,26 @@ namespace srcstats
   }
  
 
-  void Cpp_statistics::register_file_types(File_type_recognizer& rec) const
+  void Cpp_statistics::register_file_types(File_type_dispatcher& rec)
   {
-    constexpr srcstats::File_type 
-          header("C++"sv, "header"sv),
-          source("C++"sv, "source"sv);
-
     for (auto ext : { ".h"sv, ".hpp"sv, ".hxx"sv, "ixx"sv })
-      rec.register_file_type(ext, header);
+      rec.register_file_type(ext, this, fst_header);
+
     for (auto ext : { ".c"sv, ".cc"sv, ".cpp"sv, ".cxx"sv })
-      rec.register_file_type(ext, source);
+      rec.register_file_type(ext, this, fst_source);
   }
 
   
-  void Cpp_statistics::consume(String file_contents, std::string_view sub_type)
+  void Cpp_statistics::consume(String file_contents, int subtype)
   {
-    auto const ft = sub_type == "header"sv ?
-         Cpp_statistics::File_type::header :
-         Cpp_statistics::File_type::source ;
-
-    _raw_cpp(file_contents, ft);
+    _raw_cpp(file_contents, subtype);
 
     file_contents.resize(std::distance(
       file_contents.data(), cpp_decomment(file_contents, file_contents.data())));
 
     remove_empty_lines_and_whitespace_endings(file_contents);
 
-    _dec_cpp(file_contents, ft);
+    _dec_cpp(file_contents, subtype);
   }
 
 

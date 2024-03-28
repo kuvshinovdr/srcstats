@@ -27,58 +27,63 @@ SOFTWARE.
 /// @author D.R.Kuvshinov kuvshinovdr at yandex.ru
 
 #include "file_type.hpp"
+#include "file.hpp"
 
 #include <initializer_list>
 #include <tuple>
 #include <algorithm>
-#include <ranges>
 
 
 namespace srcstats
 {
 
-  File_type_recognizer::File_type_recognizer()
+  bool File_type_dispatcher::File_type_desc::operator<
+        (File_type_dispatcher::File_type_desc const& other) const
   {
-    _ext.reserve(20);
-    _file_type.reserve(20);
+    auto const ext_cmp = ext.compare(other.ext);
+    if (ext_cmp < 0)
+      return true;
+    if (ext_cmp > 0)
+      return false;
+
+    if (lang < other.lang)
+      return true;
+    if (lang > other.lang)
+      return false;
+
+    if (subtype < other.subtype)
+      return true;
+    return false;
   }
 
 
-  void File_type_recognizer::register_file_type(std::filesystem::path ext, File_type file_type)
+  void File_type_dispatcher::_sort()
   {
-    _ext.emplace_back(std::move(ext));
-    _file_type.push_back(file_type);
-    _is_dirty = true;
-  }
-
-
-  void File_type_recognizer::_sort()
-  {
-    std::ranges::sort(std::views::zip(_ext, _file_type), 
-      [](auto&& a, auto&& b)
-      {
-        return std::get<0>(a).compare(std::get<0>(b)) < 0;
-      });
-
+    std::sort(_desc.begin(), _desc.end());
     _is_dirty = false;
   }
 
 
-  File_type File_type_recognizer::operator()(std::filesystem::path const& filename)
+  bool File_type_dispatcher::operator()(std::filesystem::path const& filename)
   {
     if (_is_dirty)
       _sort();
 
-    auto it = std::ranges::equal_range(_ext, filename.extension(),
-      [](auto const& a, auto const& b)
-      {
-        return a.compare(b) < 0;
-      });
+    File_type_desc probe { filename.extension() };
 
-    if (it.empty())
-      return {};
+    auto const it = std::upper_bound(_desc.begin(), _desc.end(), probe);
 
-    return _file_type.at(it.begin() - _ext.begin());
+    if (it == _desc.end() || it->ext.compare(probe.ext) != 0)
+      return false;
+
+    constexpr size_t padding_bytes     = 16;
+    constexpr size_t maximal_file_size = size_t(10) << 20;
+
+    auto file_data = read_file_to_memory(filename, padding_bytes, maximal_file_size);
+    normalize(file_data);
+
+    it->lang->consume(std::move(file_data), it->subtype);
+    return true;
   }
 
 }

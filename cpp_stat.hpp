@@ -36,14 +36,20 @@ namespace srcstats
   
   /// @brief C++ statistics accumulator interface.
   class Cpp_statistics 
-    : public Language_statistics_interface
+    : public Lang_interface
   {
   public:
+    /// @brief Returns "C++" as the language name. 
+    std::string_view language_name() const noexcept override
+    {
+      return "C++"sv;
+    }
+
     /// @brief Register all file types corresponding to C++. 
-    void register_file_types(File_type_recognizer&) const override;
+    void register_file_types(File_type_dispatcher&) override;
 
     /// @brief Accumulate statistics for the next file that has been transcoded.
-    void consume(String file_contents, std::string_view sub_type = ""sv) override;
+    void consume(String file_contents, int subtype = 0) override;
 
     /// @brief Print full statistics for C++.
     void print(std::ostream&) const override;
@@ -61,12 +67,11 @@ namespace srcstats
     }
 
   private:
-    /// @brief C++ file type: header or source.
-    enum class File_type
-    {
-      header,
-      source,
-    };
+
+    // File subtypes.
+    constexpr static int fst_header = 0;
+    constexpr static int fst_source = 1;
+    
 
     /// @brief C++ statistics accumulators: separate header and source file statistics.
     class Stat
@@ -96,12 +101,12 @@ namespace srcstats
       std::ostream& print(std::ostream& os) const;
 
       /// @brief Process the preconditioned file data according to its type.
-      Stat& operator()(String_view file_data, File_type file_type) noexcept
+      Stat& operator()(String_view file_data, int subtype) noexcept
       {
-        switch (file_type)
+        switch (subtype)
         {
-        case File_type::header: _header(file_data); break;
-        case File_type::source: _source(file_data); break;
+        case fst_header: _header(file_data); break;
+        case fst_source: _source(file_data); break;
         }
 
         return *this;
