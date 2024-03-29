@@ -64,7 +64,7 @@ namespace srcstats
     }
 
   private:
-    using In_ptr = Character const*;
+    using In_ptr  = Character const*;
     using Out_ptr = Character*;
 
     In_ptr    _cur     { nullptr };

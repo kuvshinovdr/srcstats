@@ -1,4 +1,30 @@
+/******************************************************************************
+MIT License
 
+Copyright (c) 2024 Dmitry R. Kuvshinov
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+******************************************************************************/
+
+/// @file   cpp_stat.cpp
+/// @brief  Statistics accumulator class for C++ files implementation.
+/// @author D.R.Kuvshinov kuvshinovdr at yandex.ru
 #include "cpp_stat.hpp"
 #include "cpp_decomment.hpp"
 #include "file.hpp"
@@ -47,8 +73,8 @@ namespace srcstats
   {
     _raw_cpp(file_contents, subtype);
 
-    file_contents.resize(std::distance(
-      file_contents.data(), cpp_decomment(file_contents, file_contents.data())));
+    file_contents.resize(
+      cpp_decomment(file_contents, file_contents.data()) - file_contents.data());
 
     remove_empty_lines_and_whitespace_endings(file_contents);
 
