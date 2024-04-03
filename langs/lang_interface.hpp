@@ -28,8 +28,7 @@ SOFTWARE.
 #ifndef SRCSTATS_LANG_INTERFACE_HPP_INCLUDED
 #define SRCSTATS_LANG_INTERFACE_HPP_INCLUDED
 
-#include "basic.hpp"
-#include "file_stat.hpp"
+#include "../file_stat.hpp"
 
 #include <ostream>
 

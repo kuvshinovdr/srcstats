@@ -26,11 +26,11 @@ SOFTWARE.
 /// @brief  SrcStats console application entry point.
 /// @author D.R.Kuvshinov kuvshinovdr at yandex.ru
 
-#include "cpp_stat.hpp"
-#include "cpp_decomment.hpp"
 #include "file_type.hpp"
 #include "file.hpp"
 //#include "utf8.hpp" // WIP
+
+#include "langs/cpp_stat.hpp"
 
 #include <iostream>
 #include <chrono>

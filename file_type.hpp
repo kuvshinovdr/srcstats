@@ -28,7 +28,7 @@ SOFTWARE.
 #ifndef SRCSTATS_FILE_TYPE_HPP_INCLUDED
 #define SRCSTATS_FILE_TYPE_HPP_INCLUDED
 
-#include "lang_interface.hpp"
+#include "langs/lang_interface.hpp"
 
 #include <vector>
 #include <filesystem>

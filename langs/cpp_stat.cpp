@@ -27,8 +27,9 @@ SOFTWARE.
 /// @author D.R.Kuvshinov kuvshinovdr at yandex.ru
 #include "cpp_stat.hpp"
 #include "cpp_decomment.hpp"
-#include "file.hpp"
-#include "file_type.hpp"
+
+#include "../file.hpp"
+#include "../file_type.hpp"
 
 
 namespace srcstats
