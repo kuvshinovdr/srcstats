@@ -49,8 +49,14 @@ namespace srcstats
     /// @brief Register all file types corresponding to this language. 
     virtual void register_file_types(File_type_dispatcher&) = 0;
 
-    /// @brief Accumulate statistics for the next file.
-    virtual void consume(String file_contents, int subtype = 0) = 0;
+    /// @brief Accumulate statistics for the next raw source file (with comments).
+    virtual void accumulate_raw(String const& file_contents, int subtype = 0) = 0;
+
+    /// @brief Remove comments in place.
+    virtual void decomment_in_place(String& file_contents, int subtype = 0) = 0;
+
+    /// @brief Accumulate statistics for decommented and cleaned-up source file.
+    virtual void accumulate_decommented(String const& file_contents, int subtype = 0) = 0;
 
     /// @brief Print full statistics for this language.
     virtual void print(std::ostream&) const = 0;

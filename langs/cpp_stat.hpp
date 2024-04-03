@@ -48,8 +48,14 @@ namespace srcstats
     /// @brief Register all file types corresponding to C++. 
     void register_file_types(File_type_dispatcher&) override;
 
-    /// @brief Accumulate statistics for the next file that has been transcoded.
-    void consume(String file_contents, int subtype = 0) override;
+    /// @brief Accumulate statistics for the next raw C++ file (with comments).
+    void accumulate_raw(String const& file_contents, int subtype = 0) override;
+
+    /// @brief Remove comments in place.
+    void decomment_in_place(String& file_contents, int subtype = 0) override;
+
+    /// @brief Accumulate statistics for decommented and cleaned-up source file.
+    void accumulate_decommented(String const& file_contents, int subtype = 0) override;
 
     /// @brief Print full statistics for C++.
     void print(std::ostream&) const override;

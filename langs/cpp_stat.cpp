@@ -70,15 +70,25 @@ namespace srcstats
   }
 
   
-  void Cpp_statistics::consume(String file_contents, int subtype)
+  void Cpp_statistics::accumulate_raw(String const& file_contents, int subtype)
   {
     _raw_cpp(file_contents, subtype);
+  }
 
-    file_contents.resize(
-      cpp_decomment(file_contents, file_contents.data()) - file_contents.data());
 
-    remove_empty_lines_and_whitespace_endings(file_contents);
+  void Cpp_statistics::decomment_in_place(String& file_contents, int)
+  {
+    Cpp_decomment decomment(file_contents);
+    
+    auto const new_size = 
+      decomment.to(file_contents.data()) - file_contents.data();
+    
+    file_contents.resize(new_size);
+  }
 
+  
+  void Cpp_statistics::accumulate_decommented(String const& file_contents, int subtype)
+  {
     _dec_cpp(file_contents, subtype);
   }
 

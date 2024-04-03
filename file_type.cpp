@@ -82,7 +82,14 @@ namespace srcstats
     auto file_data = read_file_to_memory(filename, padding_bytes, maximal_file_size);
     normalize(file_data);
 
-    it->lang->consume(std::move(file_data), it->subtype);
+    auto&      lang = *it->lang;
+    auto const st   =  it->subtype;
+
+    lang.accumulate_raw(file_data, st);
+    
+    lang.decomment_in_place(file_data, st);
+    remove_empty_lines_and_whitespace_endings(file_data);
+    lang.accumulate_decommented(file_data, st);
     return true;
   }
 
