@@ -28,7 +28,7 @@ SOFTWARE.
 #ifndef SRCSTATS_CPP_STAT_HPP_INCLUDED
 #define SRCSTATS_CPP_STAT_HPP_INCLUDED
 
-#include "lang_interface.hpp"
+#include "../lang_interface.hpp"
 
 
 namespace srcstats

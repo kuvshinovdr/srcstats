@@ -28,7 +28,7 @@ SOFTWARE.
 #ifndef SRCSTATS_CPP_DECOMMENT_HPP_INCLUDED
 #define SRCSTATS_CPP_DECOMMENT_HPP_INCLUDED
 
-#include "../basic.hpp"
+#include "../../basic.hpp"
 
 
 namespace srcstats

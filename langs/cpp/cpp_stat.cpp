@@ -28,8 +28,7 @@ SOFTWARE.
 #include "cpp_stat.hpp"
 #include "cpp_decomment.hpp"
 
-#include "../file.hpp"
-#include "../file_type.hpp"
+#include "../../file_type.hpp"
 
 
 namespace srcstats

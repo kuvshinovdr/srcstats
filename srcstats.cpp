@@ -30,7 +30,7 @@ SOFTWARE.
 #include "file.hpp"
 //#include "utf8.hpp" // WIP
 
-#include "langs/cpp_stat.hpp"
+#include "langs/cpp/cpp_stat.hpp"
 
 #include <iostream>
 #include <chrono>
