@@ -77,8 +77,7 @@ namespace srcstats
     /// @param os     the destination output stream
     /// @param object what objects were being counted
     /// @param value  what are the values accumulated
-    /// @return       os
-    std::ostream& print(std::ostream& os, std::string_view object, std::string_view value) const;
+    void print(std::ostream& os, std::string_view object, std::string_view value) const;
 
 
     // Mutators

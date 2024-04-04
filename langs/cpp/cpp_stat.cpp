@@ -29,87 +29,55 @@ SOFTWARE.
 #include "cpp_decomment.hpp"
 
 #include "../../file_type.hpp"
+#include "../lang_base.hpp"
 
 
 namespace srcstats
 {
 
-  std::ostream& Cpp_statistics::Stat::print(std::ostream& os) const
+  class Cpp_statistics
+    : public Lang_base<2>
   {
-    bool const
-      has_header = _header.files().count() != 0,
-      has_source = _source.files().count() != 0;
+  public:
+    static constexpr int fst_header = 0;
+    static constexpr int fst_source = 1;
 
-    if (has_header)
-      _header.print(os, "Header file statistics\n"
-                        "----------------------\n"sv);
+    /// @brief Initialize the base object.
+    Cpp_statistics()
+      : Lang_base({ "Header"sv, "Source"sv }) {}
 
-    if (has_source)
-      _source.print(os, "Source file statistics\n"
-                        "----------------------\n"sv);
+    /// @brief Returns "C++" as the language name. 
+    [[nodiscard]] std::string_view language_name() const noexcept override
+    {
+      return "C++"sv;
+    }
 
-    if (has_header && has_source)
-      total().print(os, "Total file statistics\n"
-                        "---------------------\n"sv);
+    /// @brief Register all file types corresponding to C++. 
+    void register_file_types(File_type_dispatcher& ftd) override
+    {
+      for (auto ext : { ".h"sv, ".hpp"sv, ".hxx"sv, "ixx"sv })
+        ftd.register_file_type(ext, this, fst_header);
 
-    if (has_header || has_source)
-      os << std::endl;
+      for (auto ext : { ".c"sv, ".cc"sv, ".cpp"sv, ".cxx"sv })
+        ftd.register_file_type(ext, this, fst_source);
+    }
 
-    return os;
-  }
- 
+    /// @brief Remove comments in place.
+    void decomment_in_place(String& file_contents, int = 0) override
+    {
+      Cpp_decomment decomment(file_contents);
 
-  void Cpp_statistics::register_file_types(File_type_dispatcher& rec)
+      auto const new_size =
+        decomment.to(file_contents.data()) - file_contents.data();
+
+      file_contents.resize(new_size);
+    }
+  };
+
+
+  Lang_interface_uptr new_cpp_statistics()
   {
-    for (auto ext : { ".h"sv, ".hpp"sv, ".hxx"sv, "ixx"sv })
-      rec.register_file_type(ext, this, fst_header);
-
-    for (auto ext : { ".c"sv, ".cc"sv, ".cpp"sv, ".cxx"sv })
-      rec.register_file_type(ext, this, fst_source);
-  }
-
-  
-  void Cpp_statistics::accumulate_raw(String const& file_contents, int subtype)
-  {
-    _raw_cpp(file_contents, subtype);
-  }
-
-
-  void Cpp_statistics::decomment_in_place(String& file_contents, int)
-  {
-    Cpp_decomment decomment(file_contents);
-    
-    auto const new_size = 
-      decomment.to(file_contents.data()) - file_contents.data();
-    
-    file_contents.resize(new_size);
-  }
-
-  
-  void Cpp_statistics::accumulate_decommented(String const& file_contents, int subtype)
-  {
-    _dec_cpp(file_contents, subtype);
-  }
-
-
-  void Cpp_statistics::print(std::ostream& os) const
-  {
-    if (_raw_cpp.header().files().count() + _raw_cpp.source().files().count() == 0)
-      return;
-
-    os << "\n========================\n"
-            "# C++ files statistics #\n"
-            "========================\n\n";
-
-    os << "Raw files\n"
-          "=========\n\n";
-    _raw_cpp.print(os);
-
-    os << "Decommented files\n"
-          "=================\n\n";
-    _dec_cpp.print(os);
-    
-    os << std::endl;
+    return std::make_unique<Cpp_statistics>();
   }
 
 }

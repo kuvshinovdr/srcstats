@@ -35,6 +35,7 @@ SOFTWARE.
 #include <iostream>
 #include <chrono>
 #include <ranges>
+#include <vector>
 #include <functional>
 
 using namespace std;
@@ -43,40 +44,6 @@ namespace fs = filesystem;
 
 namespace srcstats
 {
-
-  /// @brief      Check command line arguments for help markers and print help if requested.
-  /// @param argc how many command line arguments do we have including the command itself
-  /// @param argv the array of the arguments
-  /// @return     true if help has been printed, false otherwise
-  bool print_help(int argc, char* argv[])
-  {
-    static string_view const help_markers[]
-    {
-      "-H"sv,
-      "-h"sv,
-      "--help"sv,
-      "/?"sv,
-      "-?"sv,
-      "?"sv,
-    };
-
-    if (argc == 1 || (argc == 2 && ranges::contains(help_markers, argv[1])))
-    {
-      cout <<
-        "SrcStats v.0.5\n"
-        "==============\n\n"
-        "Author: Kuvshinov D.R.\n"
-        "This has been an educational project for my C++ lessons.\n\n"
-        "Pass file or directory paths as command line parameters in order to calculate\n"
-        "C++ source files statistics.\n\n"
-        "Currently only ASCII encoding is correctly handled.\n\n";
-
-      return true;
-    }
-
-    return false;
-  }
-
 
   /// @brief        Try to perform the action and deal with possible exceptions: std::exception or File_error.
   /// @param action the functional object to be called in exception catching environment
@@ -107,14 +74,19 @@ namespace srcstats
   }
 
 
-  /// @brief SrcStats logic.
+  /// @brief SrcStats application logic.
   class Source_statistics_application
   {
   public:
 
     Source_statistics_application()
     {
-      _cpp.register_file_types(_file_type_dispatcher);
+      // Add each supported language here.
+      _langs.emplace_back(new_cpp_statistics());
+
+      // Register file types.
+      for (auto& lang: _langs)
+        lang->register_file_types(_file_type_dispatcher);
     }
 
 
@@ -123,7 +95,7 @@ namespace srcstats
       return run_and_report_exception([=, this]
         {
           // Check if help is requested.
-          if (print_help(argc, argv))
+          if (_print_help(argc, argv))
             return;
 
           auto const start_time = chrono::steady_clock::now();
@@ -142,15 +114,99 @@ namespace srcstats
 
   private:
 
-    File_type_dispatcher _file_type_dispatcher;
-    Cpp_statistics       _cpp;
+    File_type_dispatcher             _file_type_dispatcher;
+    std::vector<Lang_interface_uptr> _langs;
+
+
+    /// @brief      Check command line arguments for help markers and print help if requested.
+    /// @param argc how many command line arguments do we have including the command itself
+    /// @param argv the array of the arguments
+    /// @return     true if help has been printed, false otherwise
+    bool _print_help(int argc, char* argv[])
+    {
+      static string_view const help_markers[]
+      {
+        "-H"sv,
+        "-h"sv,
+        "--help"sv,
+        "/?"sv,
+        "-?"sv,
+        "?"sv,
+      };
+
+      if (argc == 1 || (argc == 2 && ranges::contains(help_markers, argv[1])))
+      {
+        cout <<
+          "SrcStats v.0.6\n"
+          "==============\n\n"
+          "Author: Kuvshinov D.R.\n"
+          "Pass file or directory paths as command line parameters in order to calculate\n"
+          "source files statistics.\n\n"
+          "Currently only ASCII encoding is correctly handled.\n\n"
+          "Supported input languages: ";
+
+        bool first = true;
+        for (auto& lang: _langs)
+        {
+          if (!first)
+            cout << ", ";
+          first = false;
+
+          cout << lang->language_name();
+        }
+
+        cout << ".\n\n";
+        return true;
+      }
+
+      return false;
+    }
+
 
     void _print_stats()
     {
-      if (_cpp.total_with_comments().files().count() == 0)
-        std::cout << "No source or header files found.\n";
-      else
-        _cpp.print(std::cout);
+      File_statistics total_raw, total_decommented;
+
+      int active_langs = 0;
+      for (auto& lang : _langs)
+      {
+        auto cur_raw = lang->total_with_comments();
+        if (cur_raw.is_empty())
+          continue;
+
+        auto cur_dec = lang->total_decommented();
+
+        total_raw(cur_raw);
+        total_decommented(cur_dec);
+
+        lang->print(cout);
+        ++active_langs;
+      }
+
+      switch (active_langs)
+      {
+      case 0:
+        cout << "No source or files have been found.\n";
+        [[fallthrough]];
+      
+      case 1:
+        return;
+
+      default:
+        cout << "===================================================\n"
+                "# Total statistics across all supported languages #\n"
+                "===================================================\n\n"sv;
+
+        cout << "Raw files\n"
+                "=========\n\n";
+        total_raw.print(cout);
+
+        cout << "Decommented files\n"
+                "=================\n\n";
+        total_decommented.print(cout);
+
+        cout << '\n';
+      }
     }
 
 

@@ -34,7 +34,7 @@ SOFTWARE.
 namespace srcstats
 {
 
-  std::ostream& Statistics_accumulator::print(
+  void Statistics_accumulator::print(
       std::ostream& os, 
       std::string_view object, 
       std::string_view value
@@ -62,8 +62,6 @@ namespace srcstats
     os << output[2] << "= " << max()     << '\n';
     os << output[3] << "= " << min()     << '\n';
     os << output[4] << "= " << average() << '\n';
-
-    return os;
   }
 
 }

@@ -42,6 +42,13 @@ namespace srcstats
   public:
     // Getters
 
+    /// @brief Check if our statistics does not have any data.
+    [[nodiscard]] constexpr bool is_empty() const noexcept
+    {
+      return _files.count() == 0;
+    }
+
+
     /// @brief Access read-only files accumulated statistics. File "value" is this file size in text lines.
     [[nodiscard]] constexpr Statistics_accumulator const& files() const noexcept
     {
@@ -58,8 +65,7 @@ namespace srcstats
     /// @brief       Print files and lines statistics.
     /// @param os    the destination output stream
     /// @param title a text to be output to os before the statistics
-    /// @return      os
-    std::ostream& print(std::ostream& os, std::string_view title) const
+    void print(std::ostream& os, std::string_view title = ""sv) const
     {
       os << title << '\n';
       _files.print(os, "files", "lines");
@@ -67,7 +73,7 @@ namespace srcstats
       os << '\n';
       _lines.print(os, "lines", "characters");
       
-      return os << '\n';
+      os << '\n';
     }
 
     

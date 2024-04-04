@@ -31,6 +31,7 @@ SOFTWARE.
 #include "../file_stat.hpp"
 
 #include <ostream>
+#include <memory>
 
 
 namespace srcstats
@@ -67,6 +68,10 @@ namespace srcstats
     /// @brief Get total statistics for this language excluding comments. 
     [[nodiscard]] virtual File_statistics total_decommented() const noexcept = 0;
   };
+
+
+  /// @brief An owning pointer to a statistics object.
+  using Lang_interface_uptr = std::unique_ptr<Lang_interface>;
 
 }
 
