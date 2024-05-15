@@ -80,8 +80,18 @@ namespace srcstats
 
   Cs_decomment::In_ptr Cs_decomment::_skip_multiline_literal() noexcept
   { 
-   constexpr static Character   token_chars[] { quote, quote, quote };
-   constexpr static String_view token         { &token_chars[0], 3  };
+   size_t depth = 3; //How many " is needed to get out of literal
+   
+   while(*_cur == quote)
+   {
+      ++depth;
+   }
+
+   static Character *token_chars = new Character[depth];
+   for(size_t i = 0; i < depth; ++i) token_chars[i] = quote; 
+
+
+   static String_view token { &token_chars[0], depth  };
 
    if (auto const pos = String_view{ _cur, _end }.find(token); pos != NPOS)
       return _cur + pos + 1;
