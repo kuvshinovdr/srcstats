@@ -1,3 +1,30 @@
+/******************************************************************************
+MIT License
+
+Copyright (c) 2024 Nikita E. Voronin
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+******************************************************************************/
+
+/// @file   cs_decomment.hpp
+/// @brief  Decomment C# source file.
+/// @author N.E.Voronin nikitavoronin953 at gmail.com
 #ifndef SRCSTATS_CS_DECOMMENT_HPP_INCLUDED
 #define SRCSTATS_CS_DECOMMENT_HPP_INCLUDED
 
@@ -51,7 +78,6 @@ namespace srcstats
     In_ptr _skip_until_comment()         noexcept; // returns where comment starts, _cur is set just after the comment 
     In_ptr _skip_literal(Character term) noexcept;
     In_ptr _skip_multiline_literal()     noexcept;
-    In_ptr _skip_raw_literal()           noexcept;
     In_ptr _skip_single_line_comment()   noexcept;
     In_ptr _skip_multiline_comment()     noexcept;
   };

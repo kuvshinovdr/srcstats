@@ -1,3 +1,30 @@
+/******************************************************************************
+MIT License
+
+Copyright (c) 2024 Nikita E. Voronin
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+******************************************************************************/
+
+/// @file   cs_decomment.cpp
+/// @brief  Ad hoc implementation of the Cs_decomment class.
+/// @author N.E.Voronin nikitvoronin953 at gmail.com
 #include "cs_decomment.hpp"
 
 
@@ -82,15 +109,10 @@ namespace srcstats
   { 
    size_t depth = 3; //How many " is needed to get out of literal
    
-   while(*_cur == quote)
-   {
-      ++depth;
-   }
+   while(*_cur++ == quote) ++depth;
 
    static Character *token_chars = new Character[depth];
    for(size_t i = 0; i < depth; ++i) token_chars[i] = quote; 
-
-
    static String_view token { &token_chars[0], depth  };
 
    if (auto const pos = String_view{ _cur, _end }.find(token); pos != NPOS)
