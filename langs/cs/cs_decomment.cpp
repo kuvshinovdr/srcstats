@@ -73,7 +73,7 @@ namespace srcstats
                   _cur = _skip_multiline_literal();
                   break;
                 default://Skipped single-line literal
-                
+                  break;  
               }
             default: //Single-line literal
               _cur = _skip_literal(head);

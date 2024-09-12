@@ -13,6 +13,8 @@ Files are considered to be provided in ASCII encoding (or compatible 8-bit encod
 
 ## Change log
 
+[Version 0.7]: Added C# support (untested!).
+
 [Version 0.6](https://github.com/kuvshinovdr/srcstats/tree/551f94c0273eecc9c4ef6dfb794525cfb7beb1fa): Better support for adding input programming languages.
 
 [Version 0.5](https://github.com/kuvshinovdr/srcstats/tree/b56b627d5b3df9d1097db49c3e72585ea134f75f): Refactored to ease adding of several input programming languages support.

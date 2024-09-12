@@ -22,66 +22,55 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ******************************************************************************/
 
-/// @file   basic.hpp
-/// @brief  Basic declarations for the whole SrcStats project.
+/// @file   cs_stat.cpp
+/// @brief  Statistics accumulator class for C# files implementation.
 /// @author D.R.Kuvshinov kuvshinovdr at yandex.ru
-#ifndef SRCSTATS_BASIC_HPP_INCLUDED
-#define SRCSTATS_BASIC_HPP_INCLUDED
+#include "cs_stat.hpp"
+#include "cs_decomment.hpp"
 
-#include <cstddef>
-#include <cstdint>
-#include <string>
-#include <string_view>
+#include "../../file_type.hpp"
+#include "../lang_base.hpp"
 
 
 namespace srcstats
 {
 
-  using std::operator""sv;
-
-
-  [[nodiscard]] constexpr size_t min(size_t a, size_t b) noexcept
+  class Cs_statistics
+    : public Lang_base<1>
   {
-    return a < b ? a : b;
-  }
+  public:
+    /// @brief Initialize the base object.
+    Cs_statistics() = default;
 
-  [[nodiscard]] constexpr size_t max(size_t a, size_t b) noexcept
-  {
-    return a < b ? b : a;
-  }
-
-  /// @brief Local character type.
-  using Character = char;
-
-  /// @brief Local string view type.
-  using String_view = std::basic_string_view<Character>;
-
-  /// @brief Local string storage.
-  using String = std::basic_string<Character>;
-
-  /// @brief Not-a-position constant.
-  constexpr auto NPOS = String_view::npos;
-
-  /// @brief Special character codes.
-  namespace characters
-  {
-    enum : Character
+    /// @brief Returns "C#" as the language name. 
+    [[nodiscard]] std::string_view language_name() const noexcept override
     {
-      NUL        = u8'\0',
-      TAB        = u8'\t',
-      LF         = u8'\n',
-      space      = u8' ' ,
-      slash      = u8'/' ,
-      backslash  = u8'\\',
-      asterisk   = u8'*' ,
-      apos       = u8'\'',
-      quote      = u8'"' ,
-      R          = u8'R' ,
-      par_open   = u8'(' ,
-      par_close  = u8')' ,
-    };
+      return "C#"sv;
+    }
+
+    /// @brief Register all file types corresponding to C++. 
+    void register_file_types(File_type_dispatcher& ftd) override
+    {
+      for (auto ext : { ".cs"sv, ".csx"sv })
+        ftd.register_file_type(ext, this);
+    }
+
+    /// @brief Remove comments in place.
+    void decomment_in_place(String& file_contents, int = 0) override
+    {
+      Cs_decomment decomment(file_contents);
+
+      auto const new_size =
+        decomment.to(file_contents.data()) - file_contents.data();
+
+      file_contents.resize(new_size);
+    }
+  };
+
+
+  Lang_interface_uptr new_cs_statistics()
+  {
+    return std::make_unique<Cs_statistics>();
   }
 
 }
-
-#endif//SRCSTATS_BASIC_HPP_INCLUDED

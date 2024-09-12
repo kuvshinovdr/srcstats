@@ -31,6 +31,7 @@ SOFTWARE.
 //#include "utf8.hpp" // WIP
 
 #include "langs/cpp/cpp_stat.hpp"
+#include "langs/cs/cs_stat.hpp"
 
 #include <iostream>
 #include <chrono>
@@ -83,6 +84,7 @@ namespace srcstats
     {
       // Add each supported language here.
       _langs.emplace_back(new_cpp_statistics());
+      _langs.emplace_back(new_cs_statistics());
 
       // Register file types.
       for (auto& lang: _langs)
@@ -137,7 +139,7 @@ namespace srcstats
       if (argc == 1 || (argc == 2 && ranges::contains(help_markers, argv[1])))
       {
         cout <<
-          "SrcStats v.0.6\n"
+          "SrcStats v.0.7\n"
           "==============\n\n"
           "Author: Kuvshinov D.R.\n"
           "Pass file or directory paths as command line parameters in order to calculate\n"
