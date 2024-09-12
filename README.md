@@ -8,12 +8,16 @@ Command line parameters may be directory or file paths or --help for minimal hel
 The program reports statistics over all header files and source files separately and in total as is and after decommenting and removing empty lines and whitespace line endings.
 Errors are reported to stderr.
 
+Pass -Xpath or --exclude path before specifying a source directory in order to remove some (sub)path from the resulting statistics.
+
 Files are considered to be provided in ASCII encoding (or compatible 8-bit encoding, not UTF-8 currently).
 
 
 ## Change log
 
-[Version 0.7]: Added C# support (untested!).
+[Version 0.8]: Added -X/--exclude parameter.
+
+[Version 0.7](https://github.com/kuvshinovdr/srcstats/tree/7f32868160c98a2860d5c6a353aae51a67e3bfd2): Added C# support (untested!).
 
 [Version 0.6](https://github.com/kuvshinovdr/srcstats/tree/551f94c0273eecc9c4ef6dfb794525cfb7beb1fa): Better support for adding input programming languages.
 

@@ -33,11 +33,13 @@ SOFTWARE.
 #include "langs/cpp/cpp_stat.hpp"
 #include "langs/cs/cs_stat.hpp"
 
-#include <iostream>
+#include <iterator>
+#include <functional>
 #include <chrono>
 #include <ranges>
 #include <vector>
-#include <functional>
+#include <unordered_set>
+#include <iostream>
 
 using namespace std;
 namespace fs = filesystem;
@@ -117,7 +119,9 @@ namespace srcstats
   private:
 
     File_type_dispatcher             _file_type_dispatcher;
+    std::unordered_set<fs::path>     _excluded_folders;
     std::vector<Lang_interface_uptr> _langs;
+    bool                             _exclude_next_path = false;
 
 
     /// @brief      Check command line arguments for help markers and print help if requested.
@@ -139,11 +143,13 @@ namespace srcstats
       if (argc == 1 || (argc == 2 && ranges::contains(help_markers, argv[1])))
       {
         cout <<
-          "SrcStats v.0.7\n"
+          "SrcStats v.0.8\n"
           "==============\n\n"
           "Author: Kuvshinov D.R.\n"
           "Pass file or directory paths as command line parameters in order to calculate\n"
           "source files statistics.\n\n"
+          "Pass -Xpath or --exclude path in order to exclude a path from the statistics.\n"
+          "The excluded paths shall precede the paths of the accumulated source files.\n\n"
           "Currently only ASCII encoding is correctly handled.\n\n"
           "Supported input languages: ";
 
@@ -189,7 +195,7 @@ namespace srcstats
       {
       case 0:
         cout << "No source or files have been found.\n";
-        [[fallthrough]];
+        return;
       
       case 1:
         return;
@@ -214,16 +220,60 @@ namespace srcstats
 
     void _process_argument(char const* arg)
     {
-      if (fs::path path = arg; fs::is_directory(path))
+      if (std::string_view sv{ arg }; sv == "--exclude"sv)
       {
-        for (fs::recursive_directory_iterator it(path), end; it != end; ++it)
-          run_and_report_exception([this, &entry = *it]
-            {
-              if (entry.is_regular_file())
-                _file_type_dispatcher(entry.path());
-            });
+        _exclude_next_path = true;
       }
-      else
+      else if (sv.starts_with("-X"sv))
+      {
+        _excluded_folders.emplace(sv.substr(2));
+        _exclude_next_path = false;
+      }
+      else if (_exclude_next_path)
+      {
+        _excluded_folders.emplace(sv);
+        _exclude_next_path = false;
+      }
+      else if (fs::path path = arg; fs::is_directory(path))
+      {
+        // Count for relative excluded paths.
+        std::vector<fs::path> accumulated;
+        for (auto& excl_path: _excluded_folders)
+          if (!excl_path.is_absolute())
+            accumulated.emplace_back(path / excl_path);
+
+        _excluded_folders.insert(
+            std::move_iterator(accumulated.begin()),
+            std::move_iterator(accumulated.end()));
+
+        // Depth-first search for accumulated files.
+        std::vector<fs::path> stack{path};
+        do
+        {
+          fs::path cur_path = std::move(stack.back());
+          stack.pop_back();
+          if (_excluded_folders.contains(cur_path))
+            continue;
+
+          run_and_report_exception([this, &cur_path, &stack]
+            {
+              for (fs::directory_iterator it(cur_path), end; it != end; ++it)
+              {
+                run_and_report_exception([this, &entry = *it, &stack]
+                {
+                  fs::path entry_path = entry.path();
+                  if (_excluded_folders.contains(entry_path))
+                    return;
+                  if (entry.is_regular_file())
+                    _file_type_dispatcher(entry.path());
+                  else if (entry.is_directory())
+                    stack.emplace_back(std::move(entry_path));
+                });
+              }
+            });
+        } while (!stack.empty());
+      }
+      else if (!_excluded_folders.contains(path))
       {
         if (!_file_type_dispatcher(path))
           throw File_error("file type was not recognized successfully, the file was ignored", path);
