@@ -15,7 +15,7 @@ Files are considered to be provided in ASCII encoding (or compatible 8-bit encod
 
 ## Change log
 
-[Version 0.8]: Added -X/--exclude parameter.
+[Version 0.8](https://github.com/kuvshinovdr/srcstats/tree/5704dd6abcc5f2f532bc1e118aecb8aac8f036bc): Added -X/--exclude parameter.
 
 [Version 0.7](https://github.com/kuvshinovdr/srcstats/tree/7f32868160c98a2860d5c6a353aae51a67e3bfd2): Added C# support (untested!).
 
