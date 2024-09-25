@@ -74,32 +74,26 @@ namespace srcstats
 
   void remove_empty_lines_and_whitespace_endings(File_data& file_data) noexcept
   {
-    auto write_pos = file_data.begin();
-    auto read_pos  = file_data.begin();
-    auto const end = file_data.end();
-
-    while (read_pos != end)
+    auto write_pos = file_data.begin(), end = file_data.end();
+    
+    for (auto read_pos = write_pos; read_pos != end;)
     {
-      switch (*write_pos++ = *read_pos++)
-      {
-      case LF:
-        read_pos = std::find_if(read_pos, end, [](auto ch) { return ch != LF; });
+      // Select next line.
+      auto line_begin = read_pos, lf_pos = std::find(read_pos, end, LF), line_end = lf_pos;
+      // Remove final spaces.
+      while (line_end != line_begin && *(line_end - 1) <= space)
+        --line_end;
+      // Copy if the line is non-empty.
+      if (line_begin != line_end)
+        write_pos = std::copy(line_begin, line_end, write_pos);
+      // Finish?
+      if (lf_pos == end)
         break;
 
-      case space:
-      case TAB:
-        if (auto const look_ahead = 
-              std::find_if(read_pos, end, [](auto ch) { return ch > space || ch == LF; });
-                       look_ahead != end && *look_ahead != LF)
-        {
-          write_pos = std::copy(read_pos, look_ahead, write_pos);
-          read_pos  = look_ahead;
-        }
-        break;
-
-      default:
-        break;
-      }
+      // Find the beginning of the next line.
+      read_pos = std::find_if(lf_pos, end, [](char ch) { return ch > space; });
+      if (read_pos != end)
+        *write_pos++ = LF;      
     }
 
     file_data.erase(write_pos, end);
