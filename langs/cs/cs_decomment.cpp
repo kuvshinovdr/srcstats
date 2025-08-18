@@ -1,4 +1,4 @@
-/******************************************************************************
+﻿/******************************************************************************
 MIT License
 
 Copyright (c) 2024 Nikita E. Voronin
@@ -107,15 +107,10 @@ namespace srcstats
 
   Cs_decomment::In_ptr Cs_decomment::_skip_multiline_literal() noexcept
   { 
-   size_t depth = 3; //How many " is needed to get out of literal
+    size_t depth = 3; //How many " is needed to get out of literal
    
-   while(*_cur++ == quote) ++depth;
-
-   static Character *token_chars = new Character[depth];
-   for(size_t i = 0; i < depth; ++i) token_chars[i] = quote; 
-   static String_view token { &token_chars[0], depth  };
-
-   if (auto const pos = String_view{ _cur, _end }.find(token); pos != NPOS)
+    while(*_cur++ == quote) ++depth;
+    if (auto const pos = String_view{ _cur, _end }.find(String(depth, quote)); pos != NPOS)
       return _cur + pos + 1;
     return _end;
   }
